@@ -14,11 +14,8 @@
   form{display:grid;gap:16px}
   .field{display:block}
   label{font-size:14px;margin:0 0 4px;display:block}
-  .labelline{font-size:14px;margin-bottom:6px;color:var(--ink);font-weight:600}
   input,select,textarea{width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:#fff;color:var(--ink)}
   textarea{min-height:100px;resize:vertical}
-  .checkblock{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
-  .checkblock input[type="checkbox"]{accent-color:var(--brand);transform:scale(1.2)}
   .actions{display:flex;gap:12px;justify-content:flex-end}
   button{border:0;padding:12px 16px;border-radius:8px;font-weight:600;background:var(--brand);color:#fff;cursor:pointer}
   .ghost{background:#f1f5f9;color:#111;border:1px solid var(--border)}
@@ -66,9 +63,8 @@
         </select>
       </div>
 
-      <!-- ✅ SMS permission: text then a Yes/No dropdown on its own line -->
       <div class="field">
-        <div class="labelline">OK to receive texts to this number</div>
+        <label for="allowText">OK to receive texts to this number</label>
         <select id="allowText" name="allowText">
           <option value="No" selected>No</option>
           <option value="Yes">Yes</option>
@@ -81,10 +77,12 @@
         <textarea id="questions" name="questions" placeholder="Ask us anything or share how we can help."></textarea>
       </div>
 
-      <!-- Keep “coffee with the pastor” as a simple checkbox block -->
-      <div class="checkblock field">
-        <input type="checkbox" id="meetingRequest" name="meetingRequest">
+      <div class="field">
         <label for="meetingRequest">Request a coffee with the Pastor</label>
+        <select id="meetingRequest" name="meetingRequest">
+          <option value="No" selected>No</option>
+          <option value="Yes">Yes</option>
+        </select>
       </div>
 
       <div id="meetingBlock" style="display:none">
@@ -104,11 +102,14 @@
         </div>
 
         <div class="field">
-          <label>Preferred Times (pick any)</label>
-          <div class="checkblock"><input type="checkbox" id="t1" name="meetingTimes" value="Sunday after service"><label for="t1">Sunday after service</label></div>
-          <div class="checkblock"><input type="checkbox" id="t2" name="meetingTimes" value="Weekday morning"><label for="t2">Weekday morning</label></div>
-          <div class="checkblock"><input type="checkbox" id="t3" name="meetingTimes" value="Weekday lunch"><label for="t3">Weekday lunch</label></div>
-          <div class="checkblock"><input type="checkbox" id="t4" name="meetingTimes" value="Weekday evening"><label for="t4">Weekday evening</label></div>
+          <label for="meetingTime">Preferred Time</label>
+          <select id="meetingTime" name="meetingTime">
+            <option value="">-- Select --</option>
+            <option value="Sunday after service">Sunday after service</option>
+            <option value="Weekday morning">Weekday morning</option>
+            <option value="Weekday lunch">Weekday lunch</option>
+            <option value="Weekday evening">Weekday evening</option>
+          </select>
         </div>
       </div>
 
@@ -132,7 +133,7 @@
   const GAS_URL = 'https://script.google.com/macros/s/AKfycbwmXFLgmbTo8wOTwALXcnxeQMaCMgMYWphSa-xyyzllCZVdt0V34JY1YODWPMY_bpXUag/exec';
 
   const form = document.getElementById('connectForm');
-  const meetingToggle = document.getElementById('meetingRequest');
+  const meetingSel = document.getElementById('meetingRequest');
   const meetingBlock = document.getElementById('meetingBlock');
   const allowTextSel = document.getElementById('allowText');
   const textNote = document.getElementById('textConsentNote');
@@ -143,13 +144,10 @@
   const show = el => el.style.display = '';
   const hide = el => el.style.display = 'none';
 
-  meetingToggle.addEventListener('change', () => meetingBlock.style.display = meetingToggle.checked ? '' : 'none');
+  meetingSel.addEventListener('change', () => meetingBlock.style.display = (meetingSel.value === 'Yes') ? '' : 'none');
   allowTextSel.addEventListener('change', () => allowTextSel.value === 'Yes' ? show(textNote) : hide(textNote));
 
-  resetBtn.addEventListener('click', () => {
-    form.reset(); hide(textNote); hide(meetingBlock);
-    alertBox.className='alert'; alertBox.textContent='';
-  });
+  resetBtn.addEventListener('click', () => { form.reset(); hide(textNote); hide(meetingBlock); alertBox.className='alert'; alertBox.textContent=''; });
 
   function validate() {
     const name = form.name.value.trim();
@@ -163,10 +161,8 @@
   function payload() {
     const fd = new FormData(form);
     const obj = Object.fromEntries(fd.entries());
-    // convert Yes/No to boolean
     obj.allowText = (allowTextSel.value === 'Yes');
-    obj.meetingRequest = form.meetingRequest.checked;
-    obj.meetingTimes = Array.from(document.querySelectorAll('input[name="meetingTimes"]:checked')).map(i=>i.value);
+    obj.meetingRequest = (meetingSel.value === 'Yes');
     return obj;
   }
 
