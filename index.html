@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>First Time Here? • Connect</title>
+<style>
+  :root { --ink:#111; --muted:#555; --border:#ddd; --brand:#1d4ed8; }
+  *,*::before,*::after{box-sizing:border-box}
+  body{margin:0;background:#fff;color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:640px;margin:32px auto;padding:0 16px}
+  h1{margin:0 0 8px}
+  p.lead{margin:0 0 16px;color:var(--muted)}
+  form{display:grid;gap:16px}
+  .field{display:block}
+  label{font-size:14px;margin:0 0 4px;display:block}
+  input,select,textarea{width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:#fff;color:var(--ink)}
+  textarea{min-height:100px;resize:vertical}
+  .checkwrap{display:flex;align-items:center;gap:10px}
+  .checkwrap input[type="checkbox"]{accent-color:var(--brand);transform:scale(1.1)}
+  .actions{display:flex;gap:12px;justify-content:flex-end}
+  button{border:0;padding:12px 16px;border-radius:8px;font-weight:600;background:var(--brand);color:#fff;cursor:pointer}
+  .ghost{background:#f1f5f9;color:#111;border:1px solid var(--border)}
+  .note{font-size:12px;color:var(--muted)}
+  .alert{padding:12px;border-radius:8px;border:1px solid transparent;display:none}
+  .alert.ok{display:block;background:#ecfdf5;border-color:#a7f3d0;color:#065f46}
+  .alert.err{display:block;background:#fef2f2;border-color:#fecaca;color:#991b1b}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>First Time Here? Let’s Connect</h1>
+    <p class="lead">Ask a question, say hello, or request a coffee with our Lead Pastor. We’ll follow up the way you prefer.</p>
+
+    <div id="alert" class="alert"></div>
+
+    <form id="connectForm" novalidate>
+      <div class="field">
+        <label for="name">Your Name *</label>
+        <input id="name" name="name" placeholder="First & Last" required>
+      </div>
+
+      <div class="field">
+        <label for="guests">Anyone with you? (optional)</label>
+        <input id="guests" name="guests" placeholder="Spouse, kids, family count, etc.">
+      </div>
+
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" placeholder="you@example.com">
+      </div>
+
+      <div class="field">
+        <label for="phone">Mobile</label>
+        <input id="phone" name="phone" type="tel" inputmode="tel" placeholder="(555) 123-4567">
+      </div>
+
+      <div class="field">
+        <label for="contactPref">Preferred Contact</label>
+        <select id="contactPref" name="contactPref">
+          <option value="Email">Email</option>
+          <option value="Text">Text</option>
+          <option value="Phone Call">Phone Call</option>
+          <option value="Either is fine">Either is fine</option>
+        </select>
+      </div>
+
+      <div class="checkwrap field">
+        <input type="checkbox" id="allowText" name="allowText">
+        <label for="allowText">OK to receive texts to this number</label>
+      </div>
+
+      <div class="field">
+        <label for="questions">Questions or Notes</label>
+        <textarea id="questions" name="questions" placeholder="Ask us anything or share how we can help."></textarea>
+      </div>
+
+      <div class="checkwrap field">
+        <input type="checkbox" id="meetingRequest" name="meetingRequest">
+        <label for="meetingRequest">Request a coffee with the Pastor</label>
+      </div>
+
+      <div id="meetingBlock" style="display:none">
+        <div class="field">
+          <label for="meetingType">Meeting Type</label>
+          <select id="meetingType" name="meetingType">
+            <option value="Coffee in person">Coffee in person</option>
+            <option value="At the church">At the church</option>
+            <option value="Phone call">Phone call</option>
+            <option value="Video chat">Video chat</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="meetingPlace">Preferred Place (if coffee)</label>
+          <input id="meetingPlace" name="meetingPlace" placeholder="Favorite coffee shop">
+        </div>
+
+        <div class="field">
+          <label>Preferred Times (pick any)</label>
+          <div class="checkwrap"><input type="checkbox" id="t1" name="meetingTimes" value="Sunday after service"><label for="t1">Sunday after service</label></div>
+          <div class="checkwrap"><input type="checkbox" id="t2" name="meetingTimes" value="Weekday morning"><label for="t2">Weekday morning</label></div>
+          <div class="checkwrap"><input type="checkbox" id="t3" name="meetingTimes" value="Weekday lunch"><label for="t3">Weekday lunch</label></div>
+          <div class="checkwrap"><input type="checkbox" id="t4" name="meetingTimes" value="Weekday evening"><label for="t4">Weekday evening</label></div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="heardFrom">How did you hear about us? (optional)</label>
+        <input id="heardFrom" name="heardFrom" placeholder="Friend, drive-by, Google, Facebook, YouTube, etc.">
+      </div>
+
+      <div class="note">
+        By giving your contact info, you agree we may contact you about your request.
+        <span id="textConsentNote" style="display:none">If you selected “OK to receive texts”, standard message/data rates may apply. Reply STOP to opt out.</span>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="ghost" id="resetBtn">Clear</button>
+        <button type="submit" id="submitBtn">Send</button>
+      </div>
+    </form>
+  </div>
+
+<script>
+  // Your Apps Script Web App endpoint:
+  const GAS_URL = 'https://script.google.com/macros/s/AKfycbwmXFLgmbTo8wOTwALXcnxeQMaCMgMYWphSa-xyyzllCZVdt0V34JY1YODWPMY_bpXUag/exec';
+
+  const form = document.getElementById('connectForm');
+  const meetingToggle = document.getElementById('meetingRequest');
+  const meetingBlock = document.getElementById('meetingBlock');
+  const allowText = document.getElementById('allowText');
+  const textNote = document.getElementById('textConsentNote');
+  const alertBox = document.getElementById('alert');
+  const submitBtn = document.getElementById('submitBtn');
+  const resetBtn = document.getElementById('resetBtn');
+
+  const show = el => el.style.display = '';
+  const hide = el => el.style.display = 'none';
+
+  meetingToggle.addEventListener('change', () => meetingBlock.style.display = meetingToggle.checked ? '' : 'none');
+  allowText.addEventListener('change', () => allowText.checked ? show(textNote) : hide(textNote));
+
+  resetBtn.addEventListener('click', () => {
+    form.reset(); hide(textNote); hide(meetingBlock);
+    alertBox.className='alert'; alertBox.textContent='';
+  });
+
+  function validate() {
+    const name = form.name.value.trim();
+    const email = form.email.value.trim();
+    const phone = form.phone.value.trim();
+    if (!name) return 'Please enter your name.';
+    if (!email && !phone) return 'Please provide an email or mobile number.';
+    return null;
+  }
+
+  function payload() {
+    const fd = new FormData(form);
+    const obj = Object.fromEntries(fd.entries());
+    obj.allowText = form.allowText.checked;
+    obj.meetingRequest = form.meetingRequest.checked;
+    obj.meetingTimes = Array.from(document.querySelectorAll('input[name="meetingTimes"]:checked')).map(i=>i.value);
+    return obj;
+  }
+
+  async function postJSON(url, data) {
+    // Try standard CORS first. If blocked, fall back to no-cors and assume success.
+    try {
+      const res = await fetch(url, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data), mode: 'cors'
+      });
+      // try to parse json; if it fails but res.ok is true, treat as success
+      try { return await res.json(); } catch { return { ok: res.ok }; }
+    } catch (e) {
+      // CORS/type error fallback
+      await fetch(url, { method: 'POST', body: JSON.stringify(data), mode: 'no-cors' });
+      return { ok: true };
+    }
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    alertBox.className='alert'; alertBox.textContent='';
+    const err = validate(); if (err) { alertBox.className='alert err'; alertBox.textContent=err; return; }
+
+    submitBtn.disabled = true; submitBtn.textContent = 'Sending…';
+
+    const data = payload();
+    const out = await postJSON(GAS_URL, data);
+
+    if (out && out.ok) {
+      alertBox.className='alert ok'; alertBox.textContent = out.message || 'Thanks! We received your info.';
+      form.reset(); hide(textNote); hide(meetingBlock);
+    } else {
+      alertBox.className='alert err'; alertBox.textContent = (out && out.error) ? out.error : 'Submission failed. Please try again.';
+    }
+
+    submitBtn.disabled = false; submitBtn.textContent = 'Send';
+  });
+</script>
+</body>
+</html>
