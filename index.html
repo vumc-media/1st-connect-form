@@ -16,8 +16,11 @@
   label{font-size:14px;margin:0 0 4px;display:block}
   input,select,textarea{width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:#fff;color:var(--ink)}
   textarea{min-height:100px;resize:vertical}
-  .checkwrap{display:flex;align-items:center;gap:10px}
-  .checkwrap input[type="checkbox"]{accent-color:var(--brand);transform:scale(1.1)}
+
+  /* checkboxes: block layout with label below */
+  .checkblock { display:flex; flex-direction:column; align-items:flex-start; gap:6px; }
+  .checkblock input[type="checkbox"] { accent-color:var(--brand); transform:scale(1.3); }
+
   .actions{display:flex;gap:12px;justify-content:flex-end}
   button{border:0;padding:12px 16px;border-radius:8px;font-weight:600;background:var(--brand);color:#fff;cursor:pointer}
   .ghost{background:#f1f5f9;color:#111;border:1px solid var(--border)}
@@ -65,7 +68,8 @@
         </select>
       </div>
 
-      <div class="checkwrap field">
+      <!-- ✅ checkbox with text underneath -->
+      <div class="checkblock field">
         <input type="checkbox" id="allowText" name="allowText">
         <label for="allowText">OK to receive texts to this number</label>
       </div>
@@ -75,7 +79,7 @@
         <textarea id="questions" name="questions" placeholder="Ask us anything or share how we can help."></textarea>
       </div>
 
-      <div class="checkwrap field">
+      <div class="checkblock field">
         <input type="checkbox" id="meetingRequest" name="meetingRequest">
         <label for="meetingRequest">Request a coffee with the Pastor</label>
       </div>
@@ -98,10 +102,10 @@
 
         <div class="field">
           <label>Preferred Times (pick any)</label>
-          <div class="checkwrap"><input type="checkbox" id="t1" name="meetingTimes" value="Sunday after service"><label for="t1">Sunday after service</label></div>
-          <div class="checkwrap"><input type="checkbox" id="t2" name="meetingTimes" value="Weekday morning"><label for="t2">Weekday morning</label></div>
-          <div class="checkwrap"><input type="checkbox" id="t3" name="meetingTimes" value="Weekday lunch"><label for="t3">Weekday lunch</label></div>
-          <div class="checkwrap"><input type="checkbox" id="t4" name="meetingTimes" value="Weekday evening"><label for="t4">Weekday evening</label></div>
+          <div class="checkblock"><input type="checkbox" id="t1" name="meetingTimes" value="Sunday after service"><label for="t1">Sunday after service</label></div>
+          <div class="checkblock"><input type="checkbox" id="t2" name="meetingTimes" value="Weekday morning"><label for="t2">Weekday morning</label></div>
+          <div class="checkblock"><input type="checkbox" id="t3" name="meetingTimes" value="Weekday lunch"><label for="t3">Weekday lunch</label></div>
+          <div class="checkblock"><input type="checkbox" id="t4" name="meetingTimes" value="Weekday evening"><label for="t4">Weekday evening</label></div>
         </div>
       </div>
 
@@ -123,7 +127,6 @@
   </div>
 
 <script>
-  // Your Apps Script Web App endpoint:
   const GAS_URL = 'https://script.google.com/macros/s/AKfycbwmXFLgmbTo8wOTwALXcnxeQMaCMgMYWphSa-xyyzllCZVdt0V34JY1YODWPMY_bpXUag/exec';
 
   const form = document.getElementById('connectForm');
@@ -141,10 +144,7 @@
   meetingToggle.addEventListener('change', () => meetingBlock.style.display = meetingToggle.checked ? '' : 'none');
   allowText.addEventListener('change', () => allowText.checked ? show(textNote) : hide(textNote));
 
-  resetBtn.addEventListener('click', () => {
-    form.reset(); hide(textNote); hide(meetingBlock);
-    alertBox.className='alert'; alertBox.textContent='';
-  });
+  resetBtn.addEventListener('click', () => { form.reset(); hide(textNote); hide(meetingBlock); alertBox.className='alert'; alertBox.textContent=''; });
 
   function validate() {
     const name = form.name.value.trim();
@@ -165,16 +165,10 @@
   }
 
   async function postJSON(url, data) {
-    // Try standard CORS first. If blocked, fall back to no-cors and assume success.
     try {
-      const res = await fetch(url, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data), mode: 'cors'
-      });
-      // try to parse json; if it fails but res.ok is true, treat as success
+      const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data), mode: 'cors' });
       try { return await res.json(); } catch { return { ok: res.ok }; }
-    } catch (e) {
-      // CORS/type error fallback
+    } catch {
       await fetch(url, { method: 'POST', body: JSON.stringify(data), mode: 'no-cors' });
       return { ok: true };
     }
@@ -187,9 +181,7 @@
 
     submitBtn.disabled = true; submitBtn.textContent = 'Sending…';
 
-    const data = payload();
-    const out = await postJSON(GAS_URL, data);
-
+    const out = await postJSON(GAS_URL, payload());
     if (out && out.ok) {
       alertBox.className='alert ok'; alertBox.textContent = out.message || 'Thanks! We received your info.';
       form.reset(); hide(textNote); hide(meetingBlock);
