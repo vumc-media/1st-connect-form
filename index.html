@@ -69,7 +69,9 @@
           <option value="No" selected>No</option>
           <option value="Yes">Yes</option>
         </select>
-        <div class="note" id="textConsentNote" style="display:none">Standard message/data rates may apply. Reply STOP to opt out.</div>
+        <div class="note" id="textConsentNote" style="display:none">
+          Standard message/data rates may apply. Reply STOP to opt out.
+        </div>
       </div>
 
       <div class="field">
@@ -77,7 +79,7 @@
         <textarea id="questions" name="questions" placeholder="Ask us anything or share how we can help."></textarea>
       </div>
 
-      <!-- ✅ Coffee with Pastor = dropdown -->
+      <!-- ✅ Coffee with Pastor dropdown only -->
       <div class="field">
         <label for="meetingRequest">Request a coffee with the Pastor</label>
         <select id="meetingRequest" name="meetingRequest">
@@ -145,10 +147,20 @@
   const show = el => el.style.display = '';
   const hide = el => el.style.display = 'none';
 
-  meetingSel.addEventListener('change', () => meetingBlock.style.display = (meetingSel.value === 'Yes') ? '' : 'none');
-  allowTextSel.addEventListener('change', () => allowTextSel.value === 'Yes' ? show(textNote) : hide(textNote));
+  meetingSel.addEventListener('change', () => {
+    meetingBlock.style.display = (meetingSel.value === 'Yes') ? '' : 'none';
+  });
 
-  resetBtn.addEventListener('click', () => { form.reset(); hide(textNote); hide(meetingBlock); alertBox.className='alert'; alertBox.textContent=''; });
+  allowTextSel.addEventListener('change', () => {
+    allowTextSel.value === 'Yes' ? show(textNote) : hide(textNote);
+  });
+
+  resetBtn.addEventListener('click', () => {
+    form.reset();
+    hide(textNote);
+    hide(meetingBlock);
+    alertBox.className='alert'; alertBox.textContent='';
+  });
 
   function validate() {
     const name = form.name.value.trim();
@@ -169,7 +181,12 @@
 
   async function postJSON(url, data) {
     try {
-      const res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data), mode:'cors' });
+      const res = await fetch(url, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(data),
+        mode:'cors'
+      });
       try { return await res.json(); } catch { return { ok: res.ok }; }
     } catch {
       await fetch(url, { method:'POST', body:JSON.stringify(data), mode:'no-cors' });
@@ -180,16 +197,21 @@
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     alertBox.className='alert'; alertBox.textContent='';
-    const err = validate(); if (err) { alertBox.className='alert err'; alertBox.textContent=err; return; }
+    const err = validate(); 
+    if (err) { alertBox.className='alert err'; alertBox.textContent=err; return; }
 
     submitBtn.disabled = true; submitBtn.textContent = 'Sending…';
     const out = await postJSON(GAS_URL, payload());
 
     if (out && out.ok) {
-      alertBox.className='alert ok'; alertBox.textContent = out.message || 'Thanks! We received your info.';
-      form.reset(); hide(textNote); hide(meetingBlock);
+      alertBox.className='alert ok';
+      alertBox.textContent = out.message || 'Thanks! We received your info.';
+      form.reset();
+      hide(textNote);
+      hide(meetingBlock);
     } else {
-      alertBox.className='alert err'; alertBox.textContent = (out && out.error) ? out.error : 'Submission failed. Please try again.';
+      alertBox.className='alert err';
+      alertBox.textContent = (out && out.error) ? out.error : 'Submission failed. Please try again.';
     }
     submitBtn.disabled = false; submitBtn.textContent = 'Send';
   });
